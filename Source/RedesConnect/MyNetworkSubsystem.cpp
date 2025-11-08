@@ -158,8 +158,10 @@ void UMyNetworkSubsystem::ReceiveData()
 			if (BytesRead > 0)
 			{
 				// Convert received data to string
-				FString ReceivedMessage = FString(UTF8_TO_TCHAR(ReceivedData.GetData()));
+				FString ReceivedMessage = FString(UTF8_TO_TCHAR((const char*)ReceivedData.GetData()));
+				ReceivedMessage = ReceivedMessage.Left(BytesRead); // extra
 				
+
 				UE_LOG(LogTemp, Log, TEXT("Received message: %s (%d bytes)"), *ReceivedMessage, BytesRead);
 				
 				// Broadcast the received message
