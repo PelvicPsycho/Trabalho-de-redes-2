@@ -133,7 +133,7 @@ bool UMyNetworkSubsystem::SendMessage(const FString& Message)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to send message. Sent %d of %d bytes"), BytesSent, BytesToSend);
 		return false;
-	}
+	}	
 }
 
 void UMyNetworkSubsystem::ReceiveData()
