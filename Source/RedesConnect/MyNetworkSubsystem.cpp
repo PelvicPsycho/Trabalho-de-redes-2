@@ -24,13 +24,11 @@ void UMyNetworkSubsystem::Deinitialize()
 
 bool UMyNetworkSubsystem::ConnectToServer(const FString& IPAddress, int32 Port)
 {
-	// Clean up existing connection
 	if (Socket)
 	{
 		Disconnect();
 	}
-
-	// Create socket
+	
 	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 	if (!SocketSubsystem)
 	{
@@ -45,7 +43,6 @@ bool UMyNetworkSubsystem::ConnectToServer(const FString& IPAddress, int32 Port)
 		return false;
 	}
 
-	// Prepare address
 	FIPv4Address IPAddr;
 	if (!FIPv4Address::Parse(IPAddress, IPAddr))
 	{
@@ -57,15 +54,13 @@ bool UMyNetworkSubsystem::ConnectToServer(const FString& IPAddress, int32 Port)
 	RemoteAddress = SocketSubsystem->CreateInternetAddr();
 	RemoteAddress->SetIp(IPAddr.Value);
 	RemoteAddress->SetPort(Port);
-
-	// Connect to server
+	
 	bool bConnected = Socket->Connect(*RemoteAddress);
 	
 	if (bConnected)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Successfully connected to %s:%d"), *IPAddress, Port);
 		
-		// Start receiving data on a timer (check every 0.01 seconds)
 		if (UWorld* World = GetWorld())
 		{
 			World->GetTimerManager().SetTimer(
@@ -90,7 +85,6 @@ bool UMyNetworkSubsystem::ConnectToServer(const FString& IPAddress, int32 Port)
 
 void UMyNetworkSubsystem::Disconnect()
 {
-	// Stop receiving timer
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(ReceiveTimerHandle);
@@ -114,14 +108,12 @@ bool UMyNetworkSubsystem::SendMessage(const FString& Message)
 		UE_LOG(LogTemp, Warning, TEXT("Cannot send message: not connected"));
 		return false;
 	}
-
-	// Convert FString to UTF8
+	
 	FTCHARToUTF8 Convert(*Message);
 	const uint8* Data = (const uint8*)Convert.Get();
 	int32 BytesToSend = Convert.Length();
 	int32 BytesSent = 0;
-
-	// Send the message
+	
 	bool bSuccess = Socket->Send(Data, BytesToSend, BytesSent);
 
 	if (bSuccess && BytesSent == BytesToSend)
@@ -145,10 +137,8 @@ void UMyNetworkSubsystem::ReceiveData()
 
 	uint32 PendingDataSize = 0;
 	
-	// Check if there's data available
 	if (Socket->HasPendingData(PendingDataSize))
 	{
-		// Allocate buffer for incoming data
 		TArray<uint8> ReceivedData;
 		ReceivedData.SetNumUninitialized(PendingDataSize);
 
@@ -157,14 +147,11 @@ void UMyNetworkSubsystem::ReceiveData()
 		{
 			if (BytesRead > 0)
 			{
-				// Convert received data to string
 				FString ReceivedMessage = FString(UTF8_TO_TCHAR((const char*)ReceivedData.GetData()));
-				ReceivedMessage = ReceivedMessage.Left(BytesRead); // extra
-				
+				ReceivedMessage = ReceivedMessage.Left(BytesRead);
 
 				UE_LOG(LogTemp, Log, TEXT("Received message: %s (%d bytes)"), *ReceivedMessage, BytesRead);
 				
-				// Broadcast the received message
 				OnMessageReceived.Broadcast(ReceivedMessage);
 			}
 		}
